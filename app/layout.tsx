@@ -1,0 +1,3 @@
+import './globals.css'; import Nav from '@/components/Nav';
+export const metadata={title:'DATALOG ONE — ResearchHub',description:'Research, data and digital skills platform'};
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><Nav/>{children}<footer className="footer"><div className="container">Datalog ICT & General Merchandise Ltd. • Data | Insight | Solutions | Success</div></footer></body></html>}
