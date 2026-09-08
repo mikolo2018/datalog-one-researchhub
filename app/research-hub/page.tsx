@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import ResearchHubTools from '@/components/ResearchHubTools';
+
+export const metadata={title:'Research Hub | Datalog ICT',description:'Free Datalog research tools for topics, datasets, statistical tests, sample size and methodology planning.'};
+
+export default function ResearchHubPage(){return <main><section className="hub-hero"><div className="container"><span className="eyebrow">Datalog Research Hub</span><h1>Research decisions, made clearer.</h1><p>Use the free tools below as a starting point, then move into Datalog's existing topic finder, diagnostic, dashboard and expert consultation services.</p><div className="hero-actions"><Link className="btn dark" href="/topic-finder">Advanced Topic Finder</Link><Link className="btn" href="/diagnostic">Research Diagnostic</Link></div></div></section><ResearchHubTools/><section className="section alt"><div className="container grid grid3"><Link className="card" href="/dashboard"><h3>Research Dashboard</h3><p>Access your saved workspace and research activity.</p></Link><Link className="card" href="/referrals"><h3>Referral Rewards</h3><p>Share Datalog and track successful referrals.</p></Link><Link className="card" href="/consultation"><h3>Expert Review</h3><p>Escalate complex methodological and analytical decisions.</p></Link></div></section></main>}
