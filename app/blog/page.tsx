@@ -1,0 +1,8 @@
+import Link from 'next/link';
+import {articles} from '@/lib/articles';
+
+export const metadata={title:'Articles & Blog | Datalog ICT',description:'Practical articles on research methods, data analysis, academic writing, digital tools and evidence-based decision-making.'};
+
+export default function BlogPage(){
+  return <main><section className="blog-hero"><div className="container"><span className="eyebrow">Articles & Blog</span><h1>Practical knowledge for better research and analysis.</h1><p>Clear, useful guidance for students, researchers, professionals and organisations—from choosing a topic to reporting defensible results.</p></div></section><section className="section"><div className="container"><div className="blog-grid">{articles.map((article,index)=><article className={'article-card '+(index===0?'featured':'')} key={article.slug}><div><span className="article-category">{article.category}</span><h2><Link href={`/blog/${article.slug}`}>{article.title}</Link></h2><p>{article.excerpt}</p></div><div className="article-meta"><span>{article.published}</span><span>{article.readTime}</span></div><Link className="text-link blog-link" href={`/blog/${article.slug}`}>Read article →</Link></article>)}</div></div></section><section className="section alt"><div className="container help-panel"><div><span className="eyebrow">Need support with your own study?</span><h2>Move from general guidance to expert assistance.</h2><p className="muted">Discuss your research design, data analysis, academic reporting or publication needs with Datalog ICT.</p></div><Link className="btn dark" href="/consultation">Book a consultation</Link></div></section></main>
+}
