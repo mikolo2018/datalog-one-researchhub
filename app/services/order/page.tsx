@@ -1,0 +1,5 @@
+import ServiceOrderForm from '@/components/ServiceOrderForm';
+
+export const metadata={title:'Submit a Project | Datalog ICT',description:'Request data analysis, research review, publication support or business analytics from Datalog ICT.'};
+
+export default function OrderPage(){return <main><section className="hub-hero"><div className="container"><span className="eyebrow">Professional services</span><h1>Tell us what needs to be done.</h1><p>Submit the project details for a confidential scope review. If you are signed in, you can attach a supporting file securely.</p></div></section><section className="section"><div className="container order-layout"><ServiceOrderForm/><aside className="order-aside"><h2>What happens next?</h2><ol><li>We review your brief and file.</li><li>We confirm scope, delivery date and total fee.</li><li>You approve the quotation and deposit.</li><li>You track progress through your account.</li></ol><p><strong>Academic integrity:</strong> Datalog provides research support, training, analysis and editorial guidance. We do not impersonate students or guarantee academic outcomes.</p></aside></div></section></main>}

@@ -1,1 +1,11 @@
-const metrics=[['New Leads','184'],['Revenue','₦1.24m'],['Conversions','18.6%'],['Referrals','42']];export default function Admin(){return <main className="section"><div className="container"><h1>Business Overview</h1><div className="grid grid4">{metrics.map(([h,v])=><div className="card" key={h}><h3>{h}</h3><div className="kpi">{v}</div></div>)}</div><div className="grid grid2" style={{marginTop:24}}><div className="card"><h3>Conversion Funnel</h3><p>Visitors — 2,840</p><p>Diagnostics — 864</p><p>Registered Users — 516</p><p>Paid Customers — 96</p><p>Expert Reviews — 31</p></div><div className="card"><h3>Top Demand</h3><p>Data Analysis</p><p>Research Diagnostic</p><p>Topic Packs</p><p>Publication Review</p><p>SPSS Training</p></div></div></div></main>}
+import {notFound,redirect} from 'next/navigation';
+import {createSupabaseServerClient} from '@/lib/supabase-server';
+import {createSupabaseAdminClient} from '@/lib/supabase-admin';
+
+export const dynamic='force-dynamic';
+export default async function AdminPage(){
+  const auth=await createSupabaseServerClient();const {data:{user}}=await auth?.auth.getUser()||{data:{user:null}};if(!user)redirect('/login');if(user.app_metadata?.role!=='admin')notFound();
+  const db=createSupabaseAdminClient();if(!db)notFound();const [payments,serviceOrders,leads,subscribers]=await Promise.all([db.from('payments').select('amount_kobo,status').eq('status','success'),db.from('service_orders').select('id',{count:'exact',head:true}),db.from('institutional_enquiries').select('id',{count:'exact',head:true}).eq('status','new'),db.from('newsletter_subscribers').select('id',{count:'exact',head:true}).eq('status','active')]);const revenue=(payments.data||[]).reduce((sum,row)=>sum+Number(row.amount_kobo||0),0);
+  const metrics=[['Verified revenue',`₦${(revenue/100).toLocaleString()}`],['Service requests',String(serviceOrders.count||0)],['Institutional leads',String(leads.count||0)],['Subscribers',String(subscribers.count||0)]];
+  return <main className="section"><div className="container"><span className="eyebrow">Private administration</span><h1>Business Overview</h1><div className="grid grid4">{metrics.map(([label,value])=><div className="card" key={label}><h3>{label}</h3><div className="kpi">{value}</div></div>)}</div></div></main>;
+}
