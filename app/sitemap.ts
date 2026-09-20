@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/opportunities',
     '/experts',
     '/institutional',
+    '/schools',
     '/services/order',
     '/blog',
   ];
