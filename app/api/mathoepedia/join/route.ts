@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
-import { mathoepediaQuestions, publicQuestion } from '@/lib/mathoepedia-questions';
+import { mathoepediaQuestions, publicQuestion, type MathoepediaQuestion } from '@/lib/mathoepedia-questions';
 import { clean, randomCode, tokenHash } from '@/lib/mathoepedia-quiz-security';
 
 export async function POST(request: Request) {
@@ -20,6 +20,6 @@ export async function POST(request: Request) {
   }).select('id').single();
   if (error || !participant) return NextResponse.json({ error: 'Unable to join the quiz.' }, { status: 500 });
   const byId = new Map(mathoepediaQuestions.map((question) => [question.id, question]));
-  const questions = session.question_ids.map((id: number) => byId.get(id)).filter(Boolean).map((question) => publicQuestion(question!));
+  const questions = (session.question_ids as number[]).map((id) => byId.get(id)).filter((question): question is MathoepediaQuestion => Boolean(question)).map(publicQuestion);
   return NextResponse.json({ ok: true, participantId: participant.id, token, session: { title: session.title, joinCode, secondsPerQuestion: session.seconds_per_question }, questions });
 }
