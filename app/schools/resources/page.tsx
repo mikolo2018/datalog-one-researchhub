@@ -26,7 +26,9 @@ export default function SchoolResourcesPage() {
       </div>
     </section>
 
-    <nav className="school-subnav" aria-label="School services sections"><div className="container"><Link href="/schools">School Services</Link><Link className="active" href="/schools/resources">Sample Questions</Link><Link href="/schools#school-consultation">Consultation</Link></div></nav>
+    <nav className="school-subnav" aria-label="School services sections"><div className="container"><Link href="/schools">School Services</Link><Link className="active" href="/schools/resources">Assessment Samples</Link><Link href="/schools/mathoepedia">Mathoepedia</Link><Link href="/schools#school-consultation">Consultation</Link></div></nav>
+
+    <section className="section matho-resource-banner"><div className="container split"><div><span className="eyebrow light">New • Mathoepedia question library</span><h2>Explore 1,200 Primary 6–JSS 1 mathematics questions.</h2><p>Practise by strand and difficulty, or open complete banks covering number sense, fractions, percentages, ratio, algebra, equations, geometry, measurement, rates and competition reasoning.</p></div><div className="resource-actions"><Link className="btn" href="/schools/mathoepedia">Explore Mathoepedia</Link><a className="secondary-btn secondary-light" href="/schools/mathoepedia#question-banks">Open full banks</a></div></div></section>
 
     <section className="section"><div className="container">
       <div className="section-heading"><span className="eyebrow">Download library</span><h2>Choose a class and subject.</h2><p className="muted">These samples demonstrate the structure and quality of Datalog assessments. Schools can commission versions aligned precisely to their approved curriculum, scheme of work and assessment calendar.</p></div>
