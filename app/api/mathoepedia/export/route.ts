@@ -15,8 +15,9 @@ export async function POST(request: Request) {
   const topics = Array.from(new Set((participants || []).flatMap((participant) => (participant.feedback?.topics || []).map((item: { topic: string }) => item.topic))));
   const headers = ['Session code','Quiz title','Category','Difficulty','Pupil name','Class','Score','Total','Percentage','Joined at','Completed at',...topics.map((topic) => topic + ' accuracy (%)'),...topics.map((topic) => topic + ' correct'),...topics.map((topic) => topic + ' total')];
   const rows = (participants || []).map((participant) => {
-    const map = new Map((participant.feedback?.topics || []).map((item: { topic: string; percentage: number; correct: number; total: number }) => [item.topic, item]));
-    return [session.join_code,session.title,session.category,session.difficulty,participant.pupil_name,participant.class_name,participant.score,participant.total,participant.percentage,participant.joined_at,participant.completed_at,...topics.map((topic) => map.get(topic)?.percentage ?? ''),...topics.map((topic) => map.get(topic)?.correct ?? ''),...topics.map((topic) => map.get(topic)?.total ?? '')];
+    const topicRows: Array<{ topic: string; percentage: number; correct: number; total: number }> = participant.feedback?.topics || [];
+    const metric = (topic: string, key: 'percentage' | 'correct' | 'total') => topicRows.find((item) => item.topic === topic)?.[key] ?? '';
+    return [session.join_code,session.title,session.category,session.difficulty,participant.pupil_name,participant.class_name,participant.score,participant.total,participant.percentage,participant.joined_at,participant.completed_at,...topics.map((topic) => metric(topic,'percentage')),...topics.map((topic) => metric(topic,'correct')),...topics.map((topic) => metric(topic,'total'))];
   });
   const output = '\uFEFF' + [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
   return new Response(output, { headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="mathoepedia-' + joinCode + '-results.csv"', 'cache-control': 'no-store' } });
