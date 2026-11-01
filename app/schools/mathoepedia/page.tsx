@@ -38,7 +38,8 @@ export default function MathoepediaPage() {
           <h1>Build competition confidence with 1,200 mathematics questions.</h1>
           <p>A growing Primary 6–JSS 1 bridge library built from Mathoepedia classroom sessions, challenge cards, question banks and competition-readiness projects.</p>
           <div className="hero-actions">
-            <a className="btn" href="#practice">Start a practice set</a>
+            <Link className="btn" href="/schools/mathoepedia/live">Launch live quiz</Link>
+            <a className="secondary-btn secondary-light" href="#practice">Start a practice set</a>
             <a className="secondary-btn secondary-light" href="#question-banks">Open full question banks</a>
           </div>
           <div className="matho-proof">
@@ -65,6 +66,7 @@ export default function MathoepediaPage() {
       <Link href="/schools">School Services</Link>
       <Link href="/schools/resources">Assessment Samples</Link>
       <Link className="active" href="/schools/mathoepedia">Mathoepedia</Link>
+      <Link href="/schools/mathoepedia/live">Live Quiz</Link>
       <Link href="/schools#school-consultation">Consultation</Link>
     </div></nav>
 
