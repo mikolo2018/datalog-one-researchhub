@@ -54,3 +54,10 @@ alter table public.matho_quiz_answers enable row level security;
 revoke all on public.matho_quiz_sessions,public.matho_quiz_participants,public.matho_quiz_answers from anon,authenticated;
 grant all on public.matho_quiz_sessions,public.matho_quiz_participants,public.matho_quiz_answers to service_role;
 grant usage,select on sequence public.matho_quiz_answers_id_seq to service_role;
+
+drop policy if exists "matho quiz sessions server only" on public.matho_quiz_sessions;
+drop policy if exists "matho quiz participants server only" on public.matho_quiz_participants;
+drop policy if exists "matho quiz answers server only" on public.matho_quiz_answers;
+create policy "matho quiz sessions server only" on public.matho_quiz_sessions for all to anon,authenticated using(false) with check(false);
+create policy "matho quiz participants server only" on public.matho_quiz_participants for all to anon,authenticated using(false) with check(false);
+create policy "matho quiz answers server only" on public.matho_quiz_answers for all to anon,authenticated using(false) with check(false);
