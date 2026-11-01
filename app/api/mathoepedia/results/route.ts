@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const db = createSupabaseAdminClient();
   if (!db) return NextResponse.json({ error: 'Quiz database is unavailable.' }, { status: 503 });
   const joinCode = clean(body.joinCode, 6).toUpperCase();
-  const { data: session } = await db.from('matho_quiz_sessions').select('*').eq('join_code', joinCode).maybeSingle();
+  const { data: session } = await db.from('matho_quiz_sessions').select('id,join_code,title,category,difficulty,question_ids,seconds_per_question,status,created_at,closed_at').eq('join_code', joinCode).maybeSingle();
   if (!session) return NextResponse.json({ error: 'Session not found.' }, { status: 404 });
   const { data: participants, error } = await db.from('matho_quiz_participants').select('id,pupil_name,class_name,score,total,percentage,feedback,joined_at,completed_at').eq('session_id', session.id).order('joined_at');
   if (error) return NextResponse.json({ error: 'Unable to load results.' }, { status: 500 });
