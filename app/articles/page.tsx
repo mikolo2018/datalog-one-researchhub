@@ -16,7 +16,8 @@ export const metadata={
 
 const xArticles=[
   {id:'2117255298163327138',url:'https://x.com/datalogict/status/2117255298163327138',label:'Featured publication 01'},
-  {id:'2083969056877510683',url:'https://x.com/datalogict/status/2083969056877510683',label:'Featured publication 02'}
+  {id:'2083969056877510683',url:'https://x.com/datalogict/status/2083969056877510683',label:'Featured publication 02'},
+  {id:'2083886651529462102',url:'https://x.com/datalogict/status/2083886651529462102',label:'Featured publication 03'}
 ];
 
 export default function ArticlesPage(){
