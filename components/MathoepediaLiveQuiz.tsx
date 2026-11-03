@@ -1,13 +1,13 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { mathoepediaTopics } from '@/lib/mathoepedia-questions';
 
 type PublicQuestion = { id:number; topic:string; difficulty:string; prompt:string; options:string[] };
 type Answer = { questionId:number; answer:string; responseMs:number };
 type Result = { score:number; total:number; percentage:number; topics:Array<{topic:string;correct:number;total:number;percentage:number}>; strengths:string[]; review:string[]; message:string };
 type Participant = { id:string;pupil_name:string;class_name?:string;score?:number;total?:number;percentage?:number;completed_at?:string;feedback?:{topics?:Array<{topic:string;percentage:number}>} };
-type TeacherData = { session:{join_code:string;title:string;status:string};participants:Participant[];metrics:{joined:number;completed:number;average:number;topicPerformance:Array<{topic:string;percentage:number;correct:number;total:number}>} };
+type TeacherData = { session:{join_code:string;title:string;category:string;difficulty:string;seconds_per_question:number;status:string;closed_at?:string};participants:Participant[];metrics:{joined:number;completed:number;average:number;topicPerformance:Array<{topic:string;percentage:number;correct:number;total:number}>} };
 
 const post = async (url:string, body:unknown) => {
   const response = await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
@@ -29,25 +29,47 @@ export default function MathoepediaLiveQuiz(){
   const [teacherData,setTeacherData]=useState<TeacherData|null>(null);
   const [hostAction,setHostAction]=useState<'create'|'recover'>('create');
   const [excelUrl,setExcelUrl]=useState('');
+  const [timeLeft,setTimeLeft]=useState(0);
+  const answersRef=useRef<Answer[]>([]);
+  const timeoutLock=useRef(false);
 
   const selected = useMemo(()=>new Map(answers.map((item)=>[item.questionId,item.answer])),[answers]);
 
   async function join(event:FormEvent<HTMLFormElement>){
     event.preventDefault(); setError(''); setLoading(true);
     const form=new FormData(event.currentTarget);
-    try{const data=await post('/api/mathoepedia/join',{joinCode:form.get('joinCode'),pupilName:form.get('pupilName'),className:form.get('className')});setAttempt(data);setQuestionStarted(Date.now());}
+    try{const data=await post('/api/mathoepedia/join',{joinCode:form.get('joinCode'),pupilName:form.get('pupilName'),className:form.get('className')});answersRef.current=[];setAnswers([]);setCurrent(0);setResult(null);setAttempt(data);setTimeLeft(data.session.secondsPerQuestion);setQuestionStarted(Date.now());}
     catch(cause){setError(cause instanceof Error?cause.message:'Unable to join.')}finally{setLoading(false)}
   }
 
   function choose(questionId:number,answer:string){
-    setAnswers((items)=>[...items.filter((item)=>item.questionId!==questionId),{questionId,answer,responseMs:Date.now()-questionStarted}]);
+    setAnswers((items)=>{const next=[...items.filter((item)=>item.questionId!==questionId),{questionId,answer,responseMs:Date.now()-questionStarted}];answersRef.current=next;return next;});
   }
 
-  async function finish(){
+  async function finish(finalAnswers=answersRef.current){
     if(!attempt)return; setError('');setLoading(true);
-    try{const data=await post('/api/mathoepedia/submit',{participantId:attempt.participantId,token:attempt.token,answers});setResult(data.result);}
+    try{const data=await post('/api/mathoepedia/submit',{participantId:attempt.participantId,token:attempt.token,answers:finalAnswers});setResult(data.result);}
     catch(cause){setError(cause instanceof Error?cause.message:'Unable to submit.')}finally{setLoading(false)}
   }
+
+  useEffect(()=>{
+    if(!attempt||result)return;
+    timeoutLock.current=false;
+    const duration=attempt.session.secondsPerQuestion*1000;
+    const tick=()=>{
+      const remainingMs=Math.max(0,duration-(Date.now()-questionStarted));
+      setTimeLeft(Math.ceil(remainingMs/1000));
+      if(remainingMs>0||timeoutLock.current)return;
+      timeoutLock.current=true;
+      const question=attempt.questions[current];
+      const existing=answersRef.current.find((item)=>item.questionId===question.id);
+      const nextAnswers=[...answersRef.current.filter((item)=>item.questionId!==question.id),existing||{questionId:question.id,answer:'',responseMs:duration}];
+      answersRef.current=nextAnswers;setAnswers(nextAnswers);
+      if(current<attempt.questions.length-1){setCurrent((value)=>value+1);setTimeLeft(attempt.session.secondsPerQuestion);setQuestionStarted(Date.now())}
+      else void finish(nextAnswers);
+    };
+    tick();const timer=window.setInterval(tick,250);return()=>window.clearInterval(timer);
+  },[attempt,current,questionStarted,result]);
 
   async function createSession(event:FormEvent<HTMLFormElement>){
     event.preventDefault();setError('');setLoading(true);
@@ -85,18 +107,24 @@ export default function MathoepediaLiveQuiz(){
   }
 
   async function copyExcelLink(){if(!excelUrl)return;await navigator.clipboard.writeText(excelUrl);}
+  function openReviewPaper(){
+    if(!teacher)return;
+    const form=document.createElement('form');form.method='POST';form.action='/api/mathoepedia/review-paper';form.target='_blank';
+    Object.entries(teacher).forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)});
+    document.body.appendChild(form);form.submit();form.remove();
+  }
   function leaveDashboard(){setTeacher(null);setTeacherData(null);setExcelUrl('');sessionStorage.removeItem('matho-host');}
 
   if(result)return <section className="live-result-card"><span className="eyebrow">Performance feedback</span><div className="live-score">{result.score}/{result.total}<small>{result.percentage}%</small></div><h2>{result.message}</h2><div className="live-topic-grid">{result.topics.map((topic)=><article key={topic.topic}><strong>{topic.topic}</strong><span>{topic.correct}/{topic.total} correct</span><div><i style={{width:topic.percentage+'%'}} /></div><b>{topic.percentage}%</b></article>)}</div>{result.review.length>0&&<p><strong>Next practice:</strong> {result.review.join(', ')}</p>}</section>;
 
   if(attempt){
     const question=attempt.questions[current];const answered=selected.has(question.id);
-    return <section className="live-quiz-card"><div className="live-quiz-head"><div><span className="eyebrow">{attempt.session.title}</span><h2>Question {current+1} of {attempt.questions.length}</h2></div><strong>{Math.round(answers.length/attempt.questions.length*100)}% answered</strong></div><div className="live-progress"><i style={{width:((current+1)/attempt.questions.length*100)+'%'}} /></div><div className="matho-question-head"><span>{question.topic}</span><span>{question.difficulty}</span></div><h3 className="live-prompt">{question.prompt}</h3><div className="live-options">{question.options.map((option,index)=>{const letter='ABCD'[index];return <button type="button" className={selected.get(question.id)===letter?'selected':''} onClick={()=>choose(question.id,letter)} key={option}><b>{letter}</b><span>{option}</span></button>})}</div><div className="live-nav"><button className="secondary-btn" type="button" disabled={current===0} onClick={()=>{setCurrent((value)=>value-1);setQuestionStarted(Date.now())}}>Previous</button>{current<attempt.questions.length-1?<button className="btn" type="button" disabled={!answered} onClick={()=>{setCurrent((value)=>value+1);setQuestionStarted(Date.now())}}>Next question</button>:<button className="btn" type="button" disabled={answers.length!==attempt.questions.length||loading} onClick={finish}>{loading?'Saving…':'Submit quiz'}</button>}</div>{error&&<p className="live-error">{error}</p>}</section>;
+    return <section className="live-quiz-card"><div className="live-quiz-head"><div><span className="eyebrow">{attempt.session.title}</span><h2>Question {current+1} of {attempt.questions.length}</h2></div><div className={'live-timer '+(timeLeft<=10?'urgent':'')} role="timer" aria-label={timeLeft+' seconds remaining'}><span>Time left</span><strong>{timeLeft}s</strong></div></div><div className="live-progress"><i style={{width:((current+1)/attempt.questions.length*100)+'%'}} /></div><div className="matho-question-head"><span>{question.topic}</span><span>{question.difficulty}</span></div><h3 className="live-prompt">{question.prompt}</h3><div className="live-options">{question.options.map((option,index)=>{const letter='ABCD'[index];return <button type="button" className={selected.get(question.id)===letter?'selected':''} onClick={()=>choose(question.id,letter)} key={option}><b>{letter}</b><span>{option}</span></button>})}</div><div className="live-nav"><span className="live-timer-note">Your answer locks when time expires, then the next question opens automatically.</span>{current<attempt.questions.length-1?<button className="btn" type="button" disabled={!answered} onClick={()=>{setCurrent((value)=>value+1);setTimeLeft(attempt.session.secondsPerQuestion);setQuestionStarted(Date.now())}}>Next question</button>:<button className="btn" type="button" disabled={answers.length!==attempt.questions.length||loading} onClick={()=>finish()}>{loading?'Saving…':'Submit quiz'}</button>}</div>{error&&<p className="live-error">{error}</p>}</section>;
   }
 
   if(mode==='host'&&teacher){
     return <section className="live-host-dashboard">
-      <div className="live-code-panel"><span>{teacherData?.session.status==='closed'?'RESULTS ARCHIVE':'LIVE SESSION CODE'}</span><strong>{teacher.joinCode}</strong><p>{teacherData?.session.status==='closed'?'This session is closed. The saved results remain available.':'Ask pupils to open this page and enter the code.'}</p><div><button className="secondary-btn" onClick={()=>refreshTeacher()}>Refresh</button><button className="secondary-btn" onClick={exportResults}>Download for Excel</button><button className="secondary-btn" onClick={createExcelLink}>{loading?'Preparing…':'Connect live Excel'}</button><button className="secondary-btn" onClick={leaveDashboard}>Open another session</button><button className="btn" onClick={closeSession} disabled={teacherData?.session.status==='closed'||loading}>Close session</button></div></div>
+      <div className="live-code-panel"><span>{teacherData?.session.status==='closed'?'RESULTS ARCHIVE':'LIVE SESSION CODE'}</span><strong>{teacher.joinCode}</strong><p>{teacherData?.session.status==='closed'?'This session is closed. The saved results remain available.':'Ask pupils to open this page and enter the code.'}</p><div><button className="secondary-btn" onClick={()=>refreshTeacher()}>Refresh</button><button className="secondary-btn" onClick={exportResults}>Download for Excel</button>{teacherData?.session.status==='closed'&&<button className="secondary-btn" onClick={openReviewPaper}>Revision paper (PDF)</button>}<button className="secondary-btn" onClick={createExcelLink}>{loading?'Preparing…':'Connect live Excel'}</button><button className="secondary-btn" onClick={leaveDashboard}>Open another session</button><button className="btn" onClick={closeSession} disabled={teacherData?.session.status==='closed'||loading}>Close session</button></div></div>
       {excelUrl&&<div className="live-excel-feed"><span className="eyebrow">Live Excel connection</span><h3>Refreshable results feed</h3><p>Connect the workbook once, then let Excel pull the latest results from the website.</p><ol><li>In Excel, select <strong>Data → Get Data → From Web</strong>.</li><li>Paste the private link below and load the table.</li><li>In Query Properties, select <strong>Refresh every 1 minute</strong> if you want automatic updates.</li></ol><div className="live-excel-url"><input value={excelUrl} readOnly aria-label="Live Excel feed URL" /><button type="button" className="btn" onClick={copyExcelLink}>Copy link</button></div><p className="live-private-note">Keep this link private. Creating a new link for this session immediately replaces the previous one.</p></div>}
       {teacherData&&<><div className="live-metrics"><article><span>Joined</span><strong>{teacherData.metrics.joined}</strong></article><article><span>Completed</span><strong>{teacherData.metrics.completed}</strong></article><article><span>Class average</span><strong>{teacherData.metrics.average}%</strong></article></div><div className="live-topic-grid">{teacherData.metrics.topicPerformance.map((topic)=><article key={topic.topic}><strong>{topic.topic}</strong><span>{topic.correct}/{topic.total} correct</span><div><i style={{width:topic.percentage+'%'}} /></div><b>{topic.percentage}%</b></article>)}</div><div className="live-table-wrap"><table><thead><tr><th>Pupil</th><th>Class</th><th>Status</th><th>Score</th><th>Percentage</th></tr></thead><tbody>{teacherData.participants.map((participant)=><tr key={participant.id}><td>{participant.pupil_name}</td><td>{participant.class_name||'—'}</td><td>{participant.completed_at?'Completed':'In progress'}</td><td>{participant.completed_at?participant.score+'/'+participant.total:'—'}</td><td>{participant.completed_at?participant.percentage+'%':'—'}</td></tr>)}</tbody></table></div></>}
       {error&&<p className="live-error">{error}</p>}
