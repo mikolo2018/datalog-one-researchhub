@@ -1,3 +1,5 @@
+import { sharedCompetitionQuestions } from './mathoepedia-shared-competition-questions';
+
 export type Difficulty = 'Foundation' | 'Bridge' | 'Competition';
 export type MathoepediaQuestion = { id: number; topic: string; difficulty: Difficulty; prompt: string; options: string[]; answer: string; explanation: string };
 
@@ -1730,6 +1732,8 @@ mathoepediaQuestions.push(...[
     "explanation": "Tiles along the length = 7.2/0.6 = 12. Tiles along the width = 4.8/0.6 = 8. Total = 12 x 8 = 96."
   }
 ] as MathoepediaQuestion[]);
+
+mathoepediaQuestions.push(...sharedCompetitionQuestions);
 
 export const mathoepediaTopics = Array.from(new Set(mathoepediaQuestions.map((question) => question.topic)));
 export function publicQuestion(question: MathoepediaQuestion) {
