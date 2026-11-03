@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 import { mathoepediaQuestions } from '@/lib/mathoepedia-questions';
-import { clean, randomCode, validHostKey } from '@/lib/mathoepedia-quiz-security';
+import { authorizeTeacher, clean, randomCode } from '@/lib/mathoepedia-quiz-security';
 
 export async function POST(request: Request) {
   const body = await request.json();
-  if (!validHostKey(body.hostKey)) return NextResponse.json({ error: 'Teacher access key is incorrect.' }, { status: 401 });
   const db = createSupabaseAdminClient();
   if (!db) return NextResponse.json({ error: 'Quiz database is unavailable.' }, { status: 503 });
+  const authorization = await authorizeTeacher(db, body.hostKey);
+  if (!authorization) return NextResponse.json({ error: 'Teacher access key is incorrect, expired or suspended.' }, { status: 401 });
 
   const category = clean(body.category) || 'All';
   const difficulty = clean(body.difficulty) || 'All';
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
       question_ids: questionIds,
       seconds_per_question: seconds,
       status: 'live',
+      teacher_access_id: authorization.kind === 'teacher' ? authorization.id : null,
     }).select('id,join_code,title,category,difficulty,question_ids,seconds_per_question,status,created_at').single();
     if (!error && data) return NextResponse.json({ ok: true, session: data });
     if (error?.code !== '23505') return NextResponse.json({ error: 'Unable to create the session.' }, { status: 500 });
@@ -36,11 +38,14 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const body = await request.json();
-  if (!validHostKey(body.hostKey)) return NextResponse.json({ error: 'Teacher access key is incorrect.' }, { status: 401 });
   const db = createSupabaseAdminClient();
   if (!db) return NextResponse.json({ error: 'Quiz database is unavailable.' }, { status: 503 });
+  const authorization = await authorizeTeacher(db, body.hostKey);
+  if (!authorization) return NextResponse.json({ error: 'Teacher access key is incorrect, expired or suspended.' }, { status: 401 });
   const joinCode = clean(body.joinCode, 6).toUpperCase();
-  const { error } = await db.from('matho_quiz_sessions').update({ status: 'closed', closed_at: new Date().toISOString() }).eq('join_code', joinCode);
-  if (error) return NextResponse.json({ error: 'Unable to close the session.' }, { status: 500 });
+  let query = db.from('matho_quiz_sessions').update({ status: 'closed', closed_at: new Date().toISOString() }).eq('join_code', joinCode);
+  if (authorization.kind === 'teacher') query = query.eq('teacher_access_id', authorization.id);
+  const { data, error } = await query.select('id').maybeSingle();
+  if (error || !data) return NextResponse.json({ error: 'Session not found or access denied.' }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
