@@ -1,6 +1,6 @@
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 import { mathoepediaQuestions, type MathoepediaQuestion } from '@/lib/mathoepedia-questions';
-import { clean, validHostKey } from '@/lib/mathoepedia-quiz-security';
+import { authorizeTeacher, clean } from '@/lib/mathoepedia-quiz-security';
 
 const escapeHtml=(value:unknown)=>String(value??'').replace(/[&<>"']/g,(character)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[character]||character));
 
@@ -16,12 +16,14 @@ function response(html:string,status=200){
 
 export async function POST(request:Request){
   const form=await request.formData();
-  if(!validHostKey(form.get('hostKey')))return response('<h1>Teacher access denied</h1><p>The teacher access key is incorrect.</p>',401);
   const joinCode=clean(form.get('joinCode'),6).toUpperCase();
   const db=createSupabaseAdminClient();
   if(!db)return response('<h1>Revision paper unavailable</h1><p>The quiz database is unavailable.</p>',503);
-  const {data:session}=await db.from('matho_quiz_sessions').select('id,join_code,title,category,difficulty,question_ids,seconds_per_question,status,created_at,closed_at').eq('join_code',joinCode).maybeSingle();
+  const authorization=await authorizeTeacher(db,form.get('hostKey'));
+  if(!authorization)return response('<h1>Teacher access denied</h1><p>The teacher access key is incorrect, expired or suspended.</p>',401);
+  const {data:session}=await db.from('matho_quiz_sessions').select('id,join_code,title,category,difficulty,question_ids,seconds_per_question,status,created_at,closed_at,teacher_access_id').eq('join_code',joinCode).maybeSingle();
   if(!session)return response('<h1>Session not found</h1><p>Check the six-character session code and try again.</p>',404);
+  if(authorization.kind==='teacher'&&session.teacher_access_id!==authorization.id)return response('<h1>Access denied</h1><p>This session belongs to another teacher account.</p>',403);
   if(session.status!=='closed')return response('<h1>Close the session first</h1><p>The revision paper becomes available after the live quiz has been closed.</p>',409);
 
   const bank=new Map(mathoepediaQuestions.map((question)=>[question.id,question]));
