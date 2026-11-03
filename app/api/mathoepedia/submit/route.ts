@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const participantId = clean(body.participantId, 80);
   const token = clean(body.token, 100);
-  const answers: SubmittedAnswer[] = Array.isArray(body.answers) ? body.answers.slice(0, 36) : [];
+  const answers: SubmittedAnswer[] = Array.isArray(body.answers) ? body.answers.slice(0, 40) : [];
   const db = createSupabaseAdminClient();
   if (!db) return NextResponse.json({ error: 'Quiz database is unavailable.' }, { status: 503 });
 

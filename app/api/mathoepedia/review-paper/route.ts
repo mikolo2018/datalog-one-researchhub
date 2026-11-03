@@ -29,11 +29,11 @@ export async function POST(request:Request){
   const bank=new Map(mathoepediaQuestions.map((question)=>[question.id,question]));
   const questions=(session.question_ids as number[]).map((id)=>bank.get(id)).filter((question):question is MathoepediaQuestion=>Boolean(question));
   const questionPages=questions.map((question,index)=>{
-    const options=question.options.map((option,optionIndex)=>'<li><strong>'+escapeHtml('ABCD'[optionIndex])+'.</strong> '+escapeHtml(option)+'</li>').join('');
+    const options=question.options.map((option,optionIndex)=>'<li><strong>'+escapeHtml('ABCDE'[optionIndex])+'.</strong> '+escapeHtml(option)+'</li>').join('');
     return '<article class="question"><div class="tag">'+escapeHtml(question.topic)+' - '+escapeHtml(question.difficulty)+'</div><h2>'+(index+1)+'. '+escapeHtml(question.prompt)+'</h2><ol class="options">'+options+'</ol></article>';
   }).join('');
   const answerPages=questions.map((question,index)=>{
-    const answerIndex='ABCD'.indexOf(question.answer);
+    const answerIndex='ABCDE'.indexOf(question.answer);
     return '<article class="answer"><h3>'+(index+1)+'. '+escapeHtml(question.answer)+(answerIndex>=0?' - '+escapeHtml(question.options[answerIndex]):'')+'</h3><p>'+escapeHtml(question.explanation)+'</p></article>';
   }).join('');
   const closedAt=session.closed_at?new Date(session.closed_at).toLocaleString('en-NG',{timeZone:'Africa/Lagos',dateStyle:'medium',timeStyle:'short'}):'Closed session';
