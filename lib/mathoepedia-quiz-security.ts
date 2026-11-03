@@ -26,7 +26,7 @@ export async function authorizeTeacher(db: SupabaseClient, value: unknown): Prom
   if (!supplied) return null;
   const { data } = await db.from('matho_teacher_access').select('id,status,expires_at').eq('code_hash', tokenHash(supplied)).maybeSingle();
   if (!data || data.status !== 'active' || new Date(data.expires_at).getTime() <= Date.now()) return null;
-  void db.from('matho_teacher_access').update({ last_used_at: new Date().toISOString() }).eq('id', data.id);
+  await db.from('matho_teacher_access').update({ last_used_at: new Date().toISOString() }).eq('id', data.id);
   return { kind: 'teacher', id: data.id };
 }
 
