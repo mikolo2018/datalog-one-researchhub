@@ -20,6 +20,19 @@ export async function paystackRequest(path: string, init: RequestInit = {}) {
   return { response, result };
 }
 
+export async function createAndStorePaystackPlan(item: { slug: string; name: string; priceNaira: number; recurring?: 'monthly' | 'annual' }) {
+  const db = createSupabaseAdminClient();
+  if (!db) throw new Error('PLAN_REGISTRY_UNAVAILABLE');
+  const amountKobo = item.priceNaira * 100;
+  const interval = item.recurring === 'annual' ? 'annually' : 'monthly';
+  const { data: existing } = await db.from('paystack_plan_mappings').select('plan_code,amount_kobo,interval').eq('item_slug', item.slug).eq('active', true).maybeSingle();
+  if (existing?.plan_code && Number(existing.amount_kobo) === amountKobo && existing.interval === interval) return existing.plan_code as string;
+  const { response, result } = await paystackRequest('/plan', { method: 'POST', body: JSON.stringify({ name: item.name, amount: amountKobo, interval, currency: 'NGN', description: `${item.name} on Datalog ICT` }) });
+  if (!response.ok || !result.status || !result.data?.plan_code) throw new Error(result.message || 'Unable to create Paystack plan.');
+  await db.from('paystack_plan_mappings').upsert({ item_slug: item.slug, plan_code: result.data.plan_code, amount_kobo: amountKobo, interval, active: true, updated_at: new Date().toISOString() }, { onConflict: 'item_slug' });
+  return String(result.data.plan_code);
+}
+
 function subscriptionCode(data: PaystackData) {
   return String(data?.subscription?.subscription_code || data?.subscription_code || '').trim() || null;
 }

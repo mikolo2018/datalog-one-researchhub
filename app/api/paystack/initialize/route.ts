@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 import { getCatalogItem } from '@/lib/catalog';
-import { getPaystackSecret, paystackRequest } from '@/lib/paystack';
+import { createAndStorePaystackPlan, getPaystackSecret, paystackRequest } from '@/lib/paystack';
 
 const planEnv: Record<string, string | undefined> = {
   'student-membership': process.env.PAYSTACK_PLAN_STUDENT,
@@ -55,8 +55,15 @@ export async function POST(request: Request) {
     metadata.matho_access_reference = accessRequest.reference;
   }
 
-  const plan = item.recurring ? clean(planEnv[item.slug], 120) : '';
-  if (item.recurring && !plan) return NextResponse.json({ error: 'This subscription plan is not yet configured in Paystack.' }, { status: 503 });
+  let plan = '';
+  if (item.recurring) {
+    const { data: mappedPlan } = await db.from('paystack_plan_mappings').select('plan_code').eq('item_slug', item.slug).eq('active', true).maybeSingle();
+    plan = clean(mappedPlan?.plan_code || planEnv[item.slug], 120);
+    if (!plan) {
+      try { plan = await createAndStorePaystackPlan(item); }
+      catch { return NextResponse.json({ error: 'This subscription plan could not be configured in Paystack.' }, { status: 503 }); }
+    }
+  }
   if (plan) metadata.paystack_plan_code = plan;
   const { error: ledgerError } = await db.from('payments').insert({ user_id: user?.id || null, reference, amount_kobo: amount, purpose: item.kind, status: 'pending', metadata });
   if (ledgerError) return NextResponse.json({ error: 'Unable to create the payment record.' }, { status: 500 });
@@ -65,7 +72,14 @@ export async function POST(request: Request) {
   const payload: Record<string, unknown> = { email, amount, reference, metadata, callback_url: `${origin}/checkout?reference=${encodeURIComponent(reference)}` };
   if (plan) payload.plan = plan;
   try {
-    const { response, result } = await paystackRequest('/transaction/initialize', { method: 'POST', body: JSON.stringify(payload) });
+    let { response, result } = await paystackRequest('/transaction/initialize', { method: 'POST', body: JSON.stringify(payload) });
+    if (item.recurring && (!response.ok || !result.status) && /plan not found/i.test(String(result.message || ''))) {
+      plan = await createAndStorePaystackPlan(item);
+      payload.plan = plan;
+      metadata.paystack_plan_code = plan;
+      await db.from('payments').update({ metadata }).eq('reference', reference);
+      ({ response, result } = await paystackRequest('/transaction/initialize', { method: 'POST', body: JSON.stringify(payload) }));
+    }
     if (!response.ok || !result.status) {
       await db.from('payments').update({ status: 'failed', failure_reason: clean(result.message, 300) || 'Payment initialization failed.' }).eq('reference', reference);
       return NextResponse.json({ error: result.message || 'Payment initialization failed.' }, { status: 400 });
