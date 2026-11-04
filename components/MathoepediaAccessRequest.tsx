@@ -13,7 +13,7 @@ const initialForm = {
   roleTitle: '',
   applicantType: 'teacher',
   plan: 'teacher',
-  billingCycle: 'termly',
+  billingCycle: 'monthly',
   estimatedLearners: '',
   message: '',
   website: '',
@@ -42,6 +42,7 @@ export default function MathoepediaAccessRequest() {
     setError('');
     setSuccess(null);
     try {
+      const submitted = { ...form };
       const response = await fetch('/api/mathoepedia/access-requests', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -49,6 +50,16 @@ export default function MathoepediaAccessRequest() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Your request could not be submitted.');
+      if (mode === 'subscription' && data.checkoutItemSlug) {
+        const paymentResponse = await fetch('/api/paystack/initialize', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ itemSlug: data.checkoutItemSlug, email: submitted.email, customerName: submitted.fullName, phone: submitted.phone, mathoAccessReference: data.reference }),
+        });
+        const payment = await paymentResponse.json();
+        if (payment.authorization_url) { window.location.href = payment.authorization_url; return; }
+        throw new Error(`Request ${data.reference} was saved, but payment could not start: ${payment.error || 'please try again.'}`);
+      }
       setSuccess({ reference: data.reference, message: data.message });
       setForm(initialForm);
     } catch (cause) {
@@ -74,7 +85,7 @@ export default function MathoepediaAccessRequest() {
         <h2>{mode === 'access_code' ? 'Request your teacher access key.' : 'Bring measured mathematics practice to your learners.'}</h2>
         {mode === 'access_code'
           ? <p>Use this route if Datalog ICT has invited you, your school is already participating, or you need approval to host a Mathoepedia quiz.</p>
-          : <p>Choose an individual-teacher or school/institution plan. We will confirm onboarding, payment and activation details after reviewing your request.</p>}
+          : <p>Choose an individual-teacher or school/institution monthly plan and continue directly to secure Paystack payment.</p>}
         <ul>
           <li>Create timed mathematics quiz sessions</li>
           <li>Choose categories, difficulty and question timing</li>
@@ -112,15 +123,15 @@ export default function MathoepediaAccessRequest() {
         {mode === 'access_code' && <label>Applicant type<select value={form.applicantType} onChange={(event) => update('applicantType', event.target.value)}><option value="teacher">Individual teacher</option><option value="institution">School or institution</option></select></label>}
 
         {mode === 'subscription' && <div className="live-form-grid">
-          <label>Preferred billing cycle<select value={form.billingCycle} onChange={(event) => update('billingCycle', event.target.value)}><option value="monthly">Monthly</option><option value="termly">Termly</option><option value="annual">Annual</option></select></label>
+          <label>Billing cycle<select value="monthly" onChange={() => update('billingCycle', 'monthly')}><option value="monthly">Monthly recurring subscription</option></select></label>
           <label>Estimated number of learners<input type="number" min={1} max={100000} value={form.estimatedLearners} onChange={(event) => update('estimatedLearners', event.target.value)} placeholder="e.g. 60" /></label>
         </div>}
 
         <label>{mode === 'access_code' ? 'Why do you need access?' : 'Tell us about your intended use'}<textarea value={form.message} onChange={(event) => update('message', event.target.value)} maxLength={1200} rows={4} placeholder="Classes, learner level, expected use or questions…" /></label>
         <label className="matho-honeypot" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={form.website} onChange={(event) => update('website', event.target.value)} /></label>
 
-        <button className="btn" disabled={loading}>{loading ? 'Submitting…' : mode === 'access_code' ? 'Request access code' : 'Request subscription'}</button>
-        <p className="matho-form-note">Submitting a request does not activate paid access automatically. Datalog ICT will verify the details and contact you about approval, payment and activation.</p>
+        <button className="btn" disabled={loading}>{loading ? 'Preparing…' : mode === 'access_code' ? 'Request access code' : `Continue to Paystack — ${form.plan === 'institution' ? '₦15,000' : '₦3,500'}/month`}</button>
+        <p className="matho-form-note">Subscription payments are processed securely by Paystack. Access is approved after payment confirmation; Datalog ICT then issues the private teacher code.</p>
         {success && <div className="matho-access-success" role="status"><strong>Request received — {success.reference}</strong><span>{success.message}</span></div>}
         {error && <p className="live-error" role="alert">{error}</p>}
       </form>

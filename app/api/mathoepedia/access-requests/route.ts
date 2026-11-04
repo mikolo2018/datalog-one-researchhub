@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
   const { data: recent } = await db.from('matho_access_requests').select('reference').eq('email', email).eq('request_type', requestType).gte('created_at', since).order('created_at', { ascending: false }).limit(1).maybeSingle();
   if (recent?.reference) {
-    return NextResponse.json({ ok: true, reference: recent.reference, message: 'We already received this request and will contact you after review.' });
+    return NextResponse.json({ ok: true, reference: recent.reference, checkoutItemSlug: requestType === 'subscription' ? (plan === 'institution' ? 'mathoepedia-institution' : 'mathoepedia-teacher') : null, message: 'We already received this request and will continue with it.' });
   }
 
   const reference = 'MAT-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + randomBytes(3).toString('hex').toUpperCase();
@@ -65,8 +65,9 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     reference,
+    checkoutItemSlug: requestType === 'subscription' ? (plan === 'institution' ? 'mathoepedia-institution' : 'mathoepedia-teacher') : null,
     message: requestType === 'access_code'
       ? 'Datalog ICT will verify your details and send the teacher access key through your confirmed contact.'
-      : 'Datalog ICT will contact you with the applicable subscription, payment and activation details.',
+      : 'Your subscription request has been saved. Continue to Paystack to activate it.',
   }, { status: 201, headers: { 'cache-control': 'no-store' } });
 }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 import { clean, randomCode, tokenHash, validAdminKey } from '@/lib/mathoepedia-quiz-security';
 
-const requestFields = 'id,reference,request_type,applicant_type,full_name,email,phone,institution_name,role_title,plan,billing_cycle,estimated_learners,message,status,decision_note,created_at,reviewed_at';
+const requestFields = 'id,reference,request_type,applicant_type,full_name,email,phone,institution_name,role_title,plan,billing_cycle,estimated_learners,message,status,decision_note,created_at,reviewed_at,paid_at,subscription_status,payment_id';
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -38,9 +38,10 @@ export async function PATCH(request: Request) {
   if (!requestId) return NextResponse.json({ error: 'Select a valid request.' }, { status: 400 });
 
   if (action === 'issue_code') {
-    const { data: applicant } = await db.from('matho_access_requests').select('id,full_name,institution_name,plan,applicant_type').eq('id', requestId).maybeSingle();
+    const { data: applicant } = await db.from('matho_access_requests').select('id,full_name,institution_name,plan,applicant_type,request_type,subscription_status').eq('id', requestId).maybeSingle();
     if (!applicant) return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
-    const expiryDays = Math.max(7, Math.min(730, Number(body.expiryDays) || 90));
+    if (applicant.request_type === 'subscription' && applicant.subscription_status !== 'active') return NextResponse.json({ error: 'Confirm an active Paystack subscription before issuing paid access.' }, { status: 409 });
+    const expiryDays = applicant.request_type === 'subscription' ? 35 : Math.max(7, Math.min(730, Number(body.expiryDays) || 90));
     const code = 'MTH-' + randomCode(10);
     const expiresAt = new Date(Date.now() + expiryDays * 86400000).toISOString();
     const { error } = await db.from('matho_teacher_access').upsert({

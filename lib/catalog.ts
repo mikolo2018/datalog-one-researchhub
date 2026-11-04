@@ -1,4 +1,4 @@
-export type CatalogKind='digital_product'|'course'|'membership'|'service'|'diagnostic'|'topic_pack';
+export type CatalogKind='digital_product'|'course'|'membership'|'service'|'diagnostic'|'topic_pack'|'mathoepedia';
 
 export type CatalogItem={
   slug:string;
@@ -27,13 +27,15 @@ export const catalog:CatalogItem[]=[
   {slug:'student-membership',name:'Student Membership',kind:'membership',priceNaira:3500,summary:'Affordable research tools and resources for students.',features:['Template library','Monthly group clinic','Member discounts'],recurring:'monthly'},
   {slug:'researcher-membership',name:'Researcher Membership',kind:'membership',priceNaira:8500,summary:'Advanced tools and priority support for active researchers.',features:['Everything in Student','Premium diagnostics','Priority support'],recurring:'monthly',badge:'Recommended'},
   {slug:'professional-membership',name:'Professional Membership',kind:'membership',priceNaira:15000,summary:'Ongoing analytics and research support for professionals.',features:['Advanced resource library','Quarterly expert review','Higher service discounts'],recurring:'monthly'},
+  {slug:'mathoepedia-teacher',name:'Mathoepedia Teacher Subscription',kind:'mathoepedia',priceNaira:3500,summary:'Monthly access for an individual teacher, tutor or mathematics coach.',features:['Host timed live quizzes','Recover learner results by code','Excel results and PDF revision papers'],recurring:'monthly',badge:'For teachers'},
+  {slug:'mathoepedia-institution',name:'Mathoepedia Institution Subscription',kind:'mathoepedia',priceNaira:15000,summary:'Monthly Mathoepedia access for a school, tutorial centre or learning institution.',features:['Multi-class quiz hosting','Teacher and learner performance records','Excel exports and revision resources'],recurring:'monthly',badge:'For schools'},
   {slug:'data-analysis-deposit',name:'Data Analysis Project Deposit',kind:'service',priceNaira:15000,summary:'Begin a scoped SPSS, Stata, Excel, R, Python, NVivo or dashboard project.',features:['Needs assessment','Secure project record','Balance quoted after review']},
   {slug:'proposal-review',name:'Proposal Review',kind:'service',priceNaira:15000,summary:'Expert review of alignment, feasibility and methodological clarity.',features:['Structured feedback','Priority corrections','One follow-up']},
   {slug:'publication-readiness',name:'Publication Readiness Review',kind:'service',priceNaira:20000,summary:'A structured manuscript check before journal submission.',features:['Structure review','Reporting checklist','Journal-readiness notes']},
   {slug:'dashboard-consultation',name:'Business Analytics Consultation',kind:'service',priceNaira:25000,summary:'Scope an evidence dashboard or organisational analysis project.',features:['Discovery session','Requirements summary','Project quotation']}
 ];
 
-export const kindLabels:Record<CatalogKind,string>={digital_product:'Digital resource',course:'Course',membership:'Membership',service:'Professional service',diagnostic:'Research diagnostic',topic_pack:'Topic pack'};
+export const kindLabels:Record<CatalogKind,string>={digital_product:'Digital resource',course:'Course',membership:'Membership',service:'Professional service',diagnostic:'Research diagnostic',topic_pack:'Topic pack',mathoepedia:'Mathoepedia subscription'};
 export function getCatalogItem(slug:string){return catalog.find(item=>item.slug===slug);}
 export function getCatalogByKind(kind:CatalogKind){return catalog.filter(item=>item.kind===kind);}
 export function formatNaira(amount:number){return `₦${amount.toLocaleString('en-NG')}`;}
