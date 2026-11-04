@@ -35,10 +35,10 @@ const questions = source.map((item, index) => {
 
 if (new Set(questions.map((question) => question.prompt)).size !== questions.length) throw new Error('Duplicate prompts remain in the imported set.');
 
-const output = `import type { MathoepediaQuestion } from './mathoepedia-questions';\n\n` +
+const output = `import type { RawMathoepediaQuestion } from './mathoepedia-questions';\n\n` +
   `// Imported from the ten competition assessments created in the shared Mathoepedia project.\n` +
   `// Papers 1–3 map to Bridge; Papers 4–10 map to Competition.\n` +
-  `export const sharedCompetitionQuestions: MathoepediaQuestion[] = ${JSON.stringify(questions, null, 2)};\n`;
+  `export const sharedCompetitionQuestions: RawMathoepediaQuestion[] = ${JSON.stringify(questions, null, 2)};\n`;
 
 await writeFile(new URL('../lib/mathoepedia-shared-competition-questions.ts', import.meta.url), output);
 console.log(`Generated ${questions.length} validated Mathoepedia questions.`);

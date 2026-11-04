@@ -1,8 +1,8 @@
-import type { MathoepediaQuestion } from './mathoepedia-questions';
+import type { RawMathoepediaQuestion } from './mathoepedia-questions';
 
 // Imported from the ten competition assessments created in the shared Mathoepedia project.
 // Papers 1–3 map to Bridge; Papers 4–10 map to Competition.
-export const sharedCompetitionQuestions: MathoepediaQuestion[] = [
+export const sharedCompetitionQuestions: RawMathoepediaQuestion[] = [
   {
     "id": 2001,
     "topic": "Fractions and decimals",

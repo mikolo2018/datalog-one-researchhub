@@ -2,21 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import MathoepediaPractice from '@/components/MathoepediaPractice';
+import { mathoepediaQuestions, mathoepediaTopics, MATHOEPEDIA_RIGHTS } from '@/lib/mathoepedia-questions';
 
 export const metadata: Metadata = {
   title: 'Mathoepedia Question Library | Datalog ICT',
-  description: 'Explore 1,200 Primary 6 and JSS 1 mathematics questions for competition preparation, class practice and independent learning.',
+  description: 'Explore the unified Datalog ICT Mathoepedia bank for Primary 6 and JSS 1 competition preparation, class practice and independent learning.',
 };
-
-const banks = [
-  { title: 'Week 2 Competition Readiness', count: '675 MCQs', level: 'Primary 6 → JSS 1', coverage: 'Percentages, money, ratio, algebra machines, units, time, signed numbers and rates', href: '/downloads/schools/mathoepedia/week-2-675-competition-mcqs.html', featured: true },
-  { title: 'Algebra Question Bank', count: '125 tasks', level: 'Primary 6 → JSS 1', coverage: 'Variables, expressions, substitution, brackets, patterns and modelling', href: '/downloads/schools/mathoepedia/algebra-question-bank.html' },
-  { title: 'Equations Question Bank', count: '125 tasks', level: 'Primary 6 → JSS 1', coverage: 'Unknowns, one-step and multi-step equations, fractions and applications', href: '/downloads/schools/mathoepedia/equations-question-bank.html' },
-  { title: 'Primary 6 Offline Challenge', count: '120 MCQs', level: 'Primary 6', coverage: 'Difficult mixed competition practice designed for focused revision', href: '/downloads/schools/mathoepedia/primary-6-120-offline-mcqs.html' },
-  { title: 'Whole Number Sense', count: '75 tasks', level: 'Primary 6', coverage: 'Place value, operations, estimation and competition reasoning', href: '/downloads/schools/mathoepedia/whole-number-sense.html' },
-  { title: 'Factors, Multiples, HCF & LCM', count: '75 tasks', level: 'Primary 6', coverage: 'Prime structure, factors, multiples, HCF, LCM and word problems', href: '/downloads/schools/mathoepedia/factors-multiples-hcf-lcm.html' },
-  { title: 'Wednesday Word-Problem Challenge', count: '5 deep tasks', level: 'Primary 6 → JSS 1', coverage: 'Money, fractions, perimeter, equations and proportion with clear working', href: '/downloads/schools/mathoepedia/wednesday-word-problem-challenge.html' },
-];
 
 const strands = [
   ['Number sense', 'Whole numbers, place value, estimation and operations'],
@@ -35,16 +26,16 @@ export default function MathoepediaPage() {
       <div className="container matho-hero-grid">
         <div>
           <span className="eyebrow light">Mathoepedia by Datalog ICT</span>
-          <h1>Build competition confidence with 1,200 mathematics questions.</h1>
-          <p>A growing Primary 6–JSS 1 bridge library built from Mathoepedia classroom sessions, challenge cards, question banks and competition-readiness projects.</p>
+          <h1>Build competition confidence from one unified mathematics bank.</h1>
+          <p>The Datalog ICT Mathoepedia Master Bank combines every live-quiz collection into one professionally edited Primary 6–JSS 1 pathway with consistent topics, notation, answer keys and explanations.</p>
           <div className="hero-actions">
             <Link className="btn" href="/schools/mathoepedia/live">Launch live quiz</Link>\n            <Link className="secondary-btn secondary-light" href="/schools/mathoepedia/access">Teacher access</Link>
             <a className="secondary-btn secondary-light" href="#practice">Start a practice set</a>
-            <a className="secondary-btn secondary-light" href="#question-banks">Open full question banks</a>
+            <a className="secondary-btn secondary-light" href="#master-bank">Browse the master bank</a>
           </div>
           <div className="matho-proof">
-            <span><strong>1,200</strong> question tasks</span>
-            <span><strong>8</strong> core strands</span>
+            <span><strong>{mathoepediaQuestions.length}</strong> verified questions</span>
+            <span><strong>{mathoepediaTopics.length}</strong> unified strands</span>
             <span><strong>27</strong> planned sessions</span>
           </div>
         </div>
@@ -80,13 +71,14 @@ export default function MathoepediaPage() {
       <div className="matho-strand-grid">{strands.map(([title, body], index) => <article key={title}><span>{String(index + 1).padStart(2, '0')}</span><h3>{title}</h3><p>{body}</p></article>)}</div>
     </div></section>
 
-    <section className="section" id="question-banks"><div className="container">
-      <div className="section-heading"><span className="eyebrow">Complete Mathoepedia archive</span><h2>Open the full 1,200-question collection.</h2><p className="muted">Each resource opens as a clean, searchable page that can be printed or saved as PDF. Full banks may include teacher answer keys; pupils should attempt questions before checking them.</p></div>
-      <div className="matho-bank-grid">{banks.map((bank) => <article className={bank.featured ? 'matho-bank-card featured' : 'matho-bank-card'} key={bank.title}>
-        <div className="matho-bank-meta"><span>{bank.count}</span><span>{bank.level}</span></div>
-        <h3>{bank.title}</h3><p>{bank.coverage}</p>
-        <a className="btn" href={bank.href}>Open full bank →</a>
-      </article>)}</div>
+    <section className="section" id="master-bank"><div className="container">
+      <div className="section-heading"><span className="eyebrow">Datalog ICT Mathoepedia Master Bank</span><h2>One verified bank—consistent from practice to live quiz.</h2><p className="muted">All {mathoepediaQuestions.length} questions now use branded DLM question codes, unified topic names, consistent mathematical notation, standard difficulty levels and checked answer mappings. Use the searchable practice area above or create a timed live session from the same master source.</p></div>
+      <article className="matho-bank-card featured">
+        <div className="matho-bank-meta"><span>{mathoepediaQuestions.length} MCQs</span><span>Primary 6 → JSS 1</span></div>
+        <h3>Unified Mathoepedia Question Bank</h3><p>{mathoepediaTopics.join(' • ')}</p>
+        <div className="resource-actions"><a className="btn" href="#practice">Search the full bank</a><Link className="secondary-btn" href="/schools/mathoepedia/live">Create a live quiz</Link></div>
+        <p className="muted"><small>{MATHOEPEDIA_RIGHTS} Questions may be used through authorised Mathoepedia practice, teaching and assessment services.</small></p>
+      </article>
     </div></section>
 
     <section className="section matho-programme"><div className="container split">

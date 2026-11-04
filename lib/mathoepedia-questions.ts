@@ -1,9 +1,12 @@
 import { sharedCompetitionQuestions } from './mathoepedia-shared-competition-questions';
 
 export type Difficulty = 'Foundation' | 'Bridge' | 'Competition';
-export type MathoepediaQuestion = { id: number; topic: string; difficulty: Difficulty; prompt: string; options: string[]; answer: string; explanation: string };
+export const MATHOEPEDIA_BRAND = 'Datalog ICT Mathoepedia';
+export const MATHOEPEDIA_RIGHTS = '© 2026 Datalog ICT & General Merchandise Ltd. All rights reserved.';
+export type RawMathoepediaQuestion = { id: number; topic: string; difficulty: Difficulty; prompt: string; options: string[]; answer: string; explanation: string };
+export type MathoepediaQuestion = RawMathoepediaQuestion & { code: string; brand: typeof MATHOEPEDIA_BRAND; rights: typeof MATHOEPEDIA_RIGHTS };
 
-export const mathoepediaQuestions: MathoepediaQuestion[] = [
+const legacyMathoepediaQuestions: RawMathoepediaQuestion[] = [
   {id:1,topic:'Number sense',difficulty:'Foundation',prompt:'What is the value of the digit 7 in 4,782,315?',options:['7,000','70,000','700,000','700'],answer:'C',explanation:'The 7 is in the hundred-thousands place, so its value is 700,000.'},
   {id:2,topic:'Number sense',difficulty:'Bridge',prompt:'Round 684,951 to the nearest ten thousand.',options:['680,000','685,000','690,000','700,000'],answer:'A',explanation:'The thousands digit is 4, so the ten-thousands digit stays 8.'},
   {id:3,topic:'Number sense',difficulty:'Competition',prompt:'A number gives quotient 37 remainder 5 when divided by 8. What is the number?',options:['291','296','301','309'],answer:'C',explanation:'Number = 8 × 37 + 5 = 301.'},
@@ -50,7 +53,7 @@ export const mathoepediaQuestions: MathoepediaQuestion[] = [
   {id:36,topic:'Mixed word problems',difficulty:'Competition',prompt:'Flour is sold in 500 g bags. If 750 g is needed, how many bags must be bought and how much will remain?',options:['1 bag, 250 g left','2 bags, 250 g left','2 bags, 500 g left','3 bags, 750 g left'],answer:'B',explanation:'Two bags provide 1,000 g; 1,000 − 750 = 250 g remains.'},
 ];
 
-mathoepediaQuestions.push(...[
+legacyMathoepediaQuestions.push(...[
   {
     "id": 1001,
     "topic": "Money",
@@ -1731,11 +1734,56 @@ mathoepediaQuestions.push(...[
     "answer": "B",
     "explanation": "Tiles along the length = 7.2/0.6 = 12. Tiles along the width = 4.8/0.6 = 8. Total = 12 x 8 = 96."
   }
-] as MathoepediaQuestion[]);
+] as RawMathoepediaQuestion[]);
 
-mathoepediaQuestions.push(...sharedCompetitionQuestions);
+const canonicalTopic = (topic: string) => {
+  const value = topic.toLowerCase();
+  if (/money|income|expenditure|saving|interest/.test(value)) return 'Money & Financial Mathematics';
+  if (/mean|median|mode|frequency|survey|probability|sets|overlap|data/.test(value)) return 'Statistics, Sets & Probability';
+  if (/fraction|decimal|percentage|percent|ordering representation|number line/.test(value)) return 'Fractions, Decimals & Percentages';
+  if (/factor|multiple|divisib|lcm|hcf|prime|trailing zero/.test(value)) return 'Factors, Multiples & Divisibility';
+  if (/ratio|proportion|variation|scale|gear/.test(value)) return 'Ratio, Proportion & Variation';
+  if (/algebra|equation|maximis|machine|unusual operation|missing-number|balance|sibling equation/.test(value)) return 'Algebra & Equations';
+  if (/sequence|pattern|number-row|number pyramid|addition table|linear growth|telescoping/.test(value)) return 'Patterns & Sequences';
+  if (/geometry|triangle|rectangle|circle|polygon|perimeter|area|volume|cylinder|solid|cube|face|edge|vert|symmetr|spatial|direction|turn|shortest distance|painted/.test(value)) return 'Geometry & Spatial Reasoning';
+  if (/measure|metric|speed|rate|time|clock|calendar/.test(value)) return 'Measurement, Rates & Time';
+  if (/family|ranking|paper folding|jug|handshake|truth|falsehood|swap|adjacency|systematic counting|constraint|wrapper/.test(value)) return 'Logic & Combinatorics';
+  if (/number|digit|bodmas|power|root|parity|estimat|roman|signed|consecutive|column arithmetic|division/.test(value)) return 'Number Sense & Operations';
+  return 'Mathematical Reasoning & Problem Solving';
+};
+
+const normalizeText = (value: string, sentence = false) => {
+  let text = value
+    .replace(/\bN(?=\d)/g, '₦')
+    .replace(/(\d)\s+[xX]\s+(\d)/g, '$1 × $2')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;:?!])/g, '$1')
+    .trim();
+  if (sentence && text && !/[.!?]$/.test(text)) {
+    text += /^(what|which|how|when|where|who|why|is|are|does|do|can)\b/i.test(text) ? '?' : '.';
+  }
+  return text;
+};
+
+const combinedQuestions = [...legacyMathoepediaQuestions, ...sharedCompetitionQuestions];
+const uniqueQuestions = combinedQuestions.filter((question, index, all) => {
+  const prompt = normalizeText(question.prompt).toLowerCase();
+  return all.findIndex((candidate) => normalizeText(candidate.prompt).toLowerCase() === prompt) === index;
+});
+
+export const mathoepediaQuestions: MathoepediaQuestion[] = uniqueQuestions.map((question, index) => ({
+  ...question,
+  code: `DLM-${String(index + 1).padStart(4, '0')}`,
+  topic: canonicalTopic(question.topic),
+  prompt: normalizeText(question.prompt, true),
+  options: question.options.map((option) => normalizeText(option)),
+  answer: question.answer.trim().toUpperCase(),
+  explanation: normalizeText(question.explanation, true),
+  brand: MATHOEPEDIA_BRAND,
+  rights: MATHOEPEDIA_RIGHTS,
+}));
 
 export const mathoepediaTopics = Array.from(new Set(mathoepediaQuestions.map((question) => question.topic)));
 export function publicQuestion(question: MathoepediaQuestion) {
-  return { id: question.id, topic: question.topic, difficulty: question.difficulty, prompt: question.prompt, options: question.options };
+  return { id: question.id, code: question.code, topic: question.topic, difficulty: question.difficulty, prompt: question.prompt, options: question.options, brand: question.brand };
 }
