@@ -33,10 +33,10 @@ export default function MathoepediaPractice() {
     <div className="matho-question-list">
       {visible.slice(0, visibleCount).map((question) => <article className="matho-question" key={question.id}>
         <div className="matho-question-head"><span>{question.topic}</span><span>{question.difficulty}</span></div>
-        <h3>{question.id}. {question.prompt}</h3>
+        <h3>{question.code} · {question.prompt}</h3>
         <ol type="A">{question.options.map((option) => <li key={option}>{option}</li>)}</ol>
         <button type="button" className="answer-toggle" aria-expanded={revealed.includes(question.id)} onClick={() => toggle(question.id)}>{revealed.includes(question.id) ? 'Hide answer' : 'Reveal answer'}</button>
-        {revealed.includes(question.id) && <div className="matho-answer"><strong>Answer: {question.answer}</strong><p>{question.explanation}</p></div>}
+        {revealed.includes(question.id) && <div className="matho-answer"><strong>Answer: {question.answer}</strong><p>{question.explanation}</p><small>{question.brand} · All rights reserved.</small></div>}
       </article>)}
     </div>
     {visibleCount < visible.length && <button type="button" className="btn matho-load-more" onClick={() => setVisibleCount((count) => count + 12)}>Load more questions</button>}
