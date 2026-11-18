@@ -45,7 +45,8 @@ export async function POST(request: Request) {
       const message = await askMathoepediaAI(instructions, input, 260);
       await record(db, id, mode, code);
       return NextResponse.json({ ok: true, message, groundedIn: code, remainingMessage: 'AI guidance is checked against the verified Mathoepedia answer.' });
-    } catch {
+    } catch (error) {
+      console.error('Mathoepedia pupil AI request failed:', error instanceof Error ? error.message : 'Unknown error');
       return NextResponse.json({ error: 'The AI guide is temporarily unavailable. Use the verified explanation instead.' }, { status: 503 });
     }
   }
@@ -77,7 +78,8 @@ export async function POST(request: Request) {
       );
       await record(db, id, mode);
       return NextResponse.json({ ok: true, message });
-    } catch {
+    } catch (error) {
+      console.error('Mathoepedia teacher AI request failed:', error instanceof Error ? error.message : 'Unknown error');
       return NextResponse.json({ error: 'AI teaching insight is temporarily unavailable. The standard class metrics remain available.' }, { status: 503 });
     }
   }
