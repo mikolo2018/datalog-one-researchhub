@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 import { mathoepediaQuestions } from '@/lib/mathoepedia-questions';
-import { authorizeTeacher, clean, randomCode } from '@/lib/mathoepedia-quiz-security';
+import { selectVerifiedQuestionsWithAI } from '@/lib/mathoepedia-ai';
+import { authorizeTeacher, clean, randomCode, tokenHash } from '@/lib/mathoepedia-quiz-security';
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -13,10 +14,29 @@ export async function POST(request: Request) {
   const category = clean(body.category) || 'All';
   const difficulty = clean(body.difficulty) || 'All';
   const count = Math.max(4, Math.min(40, Number(body.questionCount) || 10));
-  const seconds = Math.max(20, Math.min(300, Number(body.secondsPerQuestion) || 60));
+  const timingMode = clean(body.timingMode, 20);
+  const baseSeconds = Math.max(20, Math.min(300, Number(body.secondsPerQuestion) || 60));
+  const seconds = timingMode === 'untimed' ? 0 : timingMode === 'extra' ? Math.min(450, Math.round(baseSeconds * 1.5)) : baseSeconds;
+  const learningGoal = clean(body.learningGoal, 240);
   const pool = mathoepediaQuestions.filter((q) => (category === 'All' || q.topic === category) && (difficulty === 'All' || q.difficulty === difficulty));
   if (pool.length < 4) return NextResponse.json({ error: 'Choose a broader category or difficulty.' }, { status: 400 });
-  const questionIds = [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(count, pool.length)).map((q) => q.id);
+  const targetCount = Math.min(count, pool.length);
+  let questionIds: number[] = [];
+  let aiPlanned = false;
+  if (learningGoal) {
+    const usageScope = tokenHash(`quiz-plan:${authorization.kind === 'teacher' ? authorization.id : 'master'}`);
+    const since = new Date(); since.setUTCHours(0, 0, 0, 0);
+    const { count: aiCount } = await db.from('matho_ai_usage').select('id', { count: 'exact', head: true }).eq('fingerprint', usageScope).eq('mode', 'quiz-plan').gte('created_at', since.toISOString());
+    if ((aiCount || 0) < 20) {
+      try {
+        questionIds = await selectVerifiedQuestionsWithAI(pool, targetCount, learningGoal);
+        aiPlanned = questionIds.length >= 4;
+        if (aiPlanned) await db.from('matho_ai_usage').insert({ fingerprint: usageScope, mode: 'quiz-plan' });
+      } catch {}
+    }
+  }
+  const remaining = [...pool].filter((question) => !questionIds.includes(question.id)).sort(() => Math.random() - 0.5).map((question) => question.id);
+  questionIds = [...questionIds, ...remaining].slice(0, targetCount);
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const joinCode = randomCode();
@@ -30,7 +50,7 @@ export async function POST(request: Request) {
       status: 'live',
       teacher_access_id: authorization.kind === 'teacher' ? authorization.id : null,
     }).select('id,join_code,title,category,difficulty,question_ids,seconds_per_question,status,created_at').single();
-    if (!error && data) return NextResponse.json({ ok: true, session: data });
+    if (!error && data) return NextResponse.json({ ok: true, session: data, aiPlanned });
     if (error?.code !== '23505') return NextResponse.json({ error: 'Unable to create the session.' }, { status: 500 });
   }
   return NextResponse.json({ error: 'Unable to generate a unique session code.' }, { status: 500 });

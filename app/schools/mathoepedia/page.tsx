@@ -4,6 +4,7 @@ import Link from 'next/link';
 import './mathoepedia-video.css';
 
 import MathoepediaPractice from '@/components/MathoepediaPractice';
+import MathoepediaAccessibility from '@/components/MathoepediaAccessibility';
 import { mathoepediaQuestions, mathoepediaTopics, MATHOEPEDIA_RIGHTS } from '@/lib/mathoepedia-questions';
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ const strands = [
 
 export default function MathoepediaPage() {
   return <main>
+    <MathoepediaAccessibility />
     <section className="matho-hero">
       <div className="container matho-hero-grid">
         <div>
@@ -84,6 +86,7 @@ export default function MathoepediaPage() {
       <figure className="matho-video-figure">
         <video className="matho-platform-video" controls playsInline preload="metadata" poster="/videos/datalog-mathoepedia-platform-poster.webp" aria-label="Mathoepedia promotional film">
           <source src="/videos/datalog-mathoepedia-platform.mp4" type="video/mp4" />
+          <track kind="captions" src="/videos/datalog-mathoepedia-platform-en.vtt" srcLang="en" label="English" default />
           Your browser does not support embedded video. You can still use the Mathoepedia links beside this film.
         </video>
         <figcaption>Mathoepedia: stories they enjoy, mathematics they understand.</figcaption>

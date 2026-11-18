@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import MathoepediaLiveQuiz from '@/components/MathoepediaLiveQuiz';
+import MathoepediaAccessibility from '@/components/MathoepediaAccessibility';
 import { mathoepediaQuestions } from '@/lib/mathoepedia-questions';
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 
 export default function MathoepediaLivePage(){
   return <main>
+    <MathoepediaAccessibility />
     <section className="matho-live-hero"><div className="container"><span className="eyebrow light">Mathoepedia Live</span><h1>Run a live mathematics challenge and see learning as it happens.</h1><p>The {mathoepediaQuestions.length.toLocaleString('en-NG')}-question bank powers sessions joined with a six-character code. Each question follows the teacher-assigned countdown, advances automatically at zero, and produces learner, class, Excel and post-session revision records.</p></div></section>
     <nav className="school-subnav" aria-label="School resources sections"><div className="container"><Link href="/schools">School Services</Link><Link href="/schools/resources">Assessment Samples</Link><Link href="/schools/mathoepedia">Question Library</Link><Link className="active" href="/schools/mathoepedia/live">Live Quiz</Link><Link href="/schools/mathoepedia/access">Teacher Access</Link></div></nav>
     <section className="section"><div className="container"><MathoepediaLiveQuiz /></div></section>
