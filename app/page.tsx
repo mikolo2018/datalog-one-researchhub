@@ -28,21 +28,21 @@ export default function Home(){
         </aside>
       </div>
     </section>
-    <section className="section home-video-showcase" aria-labelledby="mathoepedia-home-video-title">
+    <section className="section home-video-showcase" aria-labelledby="research-hub-home-video-title">
       <div className="container home-video-grid">
         <div className="home-video-copy">
-          <span className="eyebrow light">Mathoepedia in action</span>
-          <h2 id="mathoepedia-home-video-title">Turn mathematics practice into measurable progress.</h2>
-          <p id="mathoepedia-home-video-description">Explore Datalog ICT’s unified Primary 6–JSS 1 question bank, run timed live quizzes, recover pupil results and export performance records for revision and school reporting.</p>
-          <div className="home-video-highlights"><span>1,200+ original questions</span><span>Timed live challenges</span><span>Excel and PDF records</span></div>
-          <div className="hero-actions"><Link className="btn" href="/schools/mathoepedia">Explore the question bank</Link><Link className="secondary-btn secondary-light" href="/schools/mathoepedia/live">Open Mathoepedia Live</Link></div>
+          <span className="eyebrow light">Datalog Research Hub in action</span>
+          <h2 id="research-hub-home-video-title">Turn research challenges into clear, defensible results.</h2>
+          <p id="research-hub-home-video-description">Explore free research tools, refine viable topics, identify suitable datasets and statistical tests, estimate sample sizes, plan methodology and access professional support when your project needs expert attention.</p>
+          <div className="home-video-highlights"><span>Free research tools</span><span>Data analysis and reporting</span><span>Expert project support</span></div>
+          <div className="hero-actions"><Link className="btn" href="/research-hub">Explore the Research Hub</Link><Link className="secondary-btn secondary-light" href="/services/order">Start a research project</Link></div>
         </div>
         <div className="home-video-frame">
-          <video className="home-promo-video" autoPlay muted loop playsInline controls preload="metadata" poster="/videos/datalog-mathoepedia-ad-poster.webp" aria-describedby="mathoepedia-home-video-description">
+          <video className="home-promo-video" autoPlay muted loop playsInline controls preload="metadata" poster="/videos/datalog-mathoepedia-ad-poster.webp" aria-describedby="research-hub-home-video-description">
             <source src="/videos/datalog-mathoepedia-ad.mp4" type="video/mp4" />
-            Your browser does not support embedded video. Visit the Mathoepedia question bank to learn more.
+            Your browser does not support embedded video. Visit the Datalog Research Hub to learn more.
           </video>
-          <span className="home-video-badge">See Mathoepedia in 10 seconds</span>
+          <span className="home-video-badge">See the Research Hub in 10 seconds</span>
         </div>
       </div>
     </section>
