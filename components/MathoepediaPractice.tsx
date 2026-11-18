@@ -12,7 +12,7 @@ export default function MathoepediaPractice() {
   const [query, setQuery] = useState('');
   const [revealed, setRevealed] = useState<number[]>([]);
   const [visibleCount, setVisibleCount] = useState(12);
-  const [ai, setAi] = useState<Record<number, { loading?: boolean; message?: string; error?: string }>>({});
+  const [ai, setAi] = useState<Record<number, { loading?: boolean; message?: string; error?: string; source?: 'ai' | 'verified-fallback' }>>({});
 
   const visible = useMemo(() => questions.filter((question) =>
     (topic === 'All' || question.topic === topic) &&
@@ -36,7 +36,7 @@ export default function MathoepediaPractice() {
       const response = await fetch('/api/mathoepedia/ai', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ mode, questionCode: code }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'AI guidance is unavailable.');
-      setAi((current) => ({ ...current, [id]: { message: data.message } }));
+      setAi((current) => ({ ...current, [id]: { message: data.message, source: data.source } }));
     } catch (cause) {
       setAi((current) => ({ ...current, [id]: { error: cause instanceof Error ? cause.message : 'AI guidance is unavailable.' } }));
     }
@@ -57,7 +57,7 @@ export default function MathoepediaPractice() {
         <ol type="A">{question.options.map((option) => <li key={option}>{option}</li>)}</ol>
         <div className="matho-question-actions"><button type="button" className="answer-toggle" aria-expanded={revealed.includes(question.id)} onClick={() => toggle(question.id)}>{revealed.includes(question.id) ? 'Hide answer' : 'Reveal answer'}</button><button type="button" className="matho-small-action" onClick={() => listen(question.prompt, question.options)}>Listen</button><button type="button" className="matho-small-action" disabled={ai[question.id]?.loading} onClick={() => askAI(question.id, question.code, 'hint')}>{ai[question.id]?.loading ? 'Thinking…' : 'AI hint'}</button>{revealed.includes(question.id) && <button type="button" className="matho-small-action" disabled={ai[question.id]?.loading} onClick={() => askAI(question.id, question.code, 'explain')}>Explain step by step</button>}</div>
         {revealed.includes(question.id) && <div className="matho-answer"><strong>Answer: {question.answer}</strong><p>{question.explanation}</p><small>{question.brand} · All rights reserved.</small></div>}
-        {ai[question.id]?.message && <div className="matho-ai-guidance" aria-live="polite"><strong>Mathoepedia AI guide</strong><p>{ai[question.id].message}</p><small>Grounded in verified question {question.code}. AI guidance can be reported if unclear.</small></div>}
+        {ai[question.id]?.message && <div className="matho-ai-guidance" aria-live="polite"><strong>{ai[question.id].source === 'verified-fallback' ? 'Verified Mathoepedia guide' : 'Mathoepedia AI guide'}</strong><p>{ai[question.id].message}</p><small>Grounded in verified question {question.code}. {ai[question.id].source === 'verified-fallback' ? 'Adaptive AI will resume automatically when available.' : 'AI guidance can be reported if unclear.'}</small></div>}
         {ai[question.id]?.error && <p className="matho-ai-error" role="alert">{ai[question.id].error}</p>}
       </article>)}
     </div>
