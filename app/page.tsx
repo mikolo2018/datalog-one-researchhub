@@ -28,6 +28,24 @@ export default function Home(){
         </aside>
       </div>
     </section>
+    <section className="section home-video-showcase" aria-labelledby="mathoepedia-home-video-title">
+      <div className="container home-video-grid">
+        <div className="home-video-copy">
+          <span className="eyebrow light">Mathoepedia in action</span>
+          <h2 id="mathoepedia-home-video-title">Turn mathematics practice into measurable progress.</h2>
+          <p id="mathoepedia-home-video-description">Explore Datalog ICT’s unified Primary 6–JSS 1 question bank, run timed live quizzes, recover pupil results and export performance records for revision and school reporting.</p>
+          <div className="home-video-highlights"><span>1,200+ original questions</span><span>Timed live challenges</span><span>Excel and PDF records</span></div>
+          <div className="hero-actions"><Link className="btn" href="/schools/mathoepedia">Explore the question bank</Link><Link className="secondary-btn secondary-light" href="/schools/mathoepedia/live">Open Mathoepedia Live</Link></div>
+        </div>
+        <div className="home-video-frame">
+          <video className="home-promo-video" autoPlay muted loop playsInline controls preload="metadata" poster="/videos/datalog-mathoepedia-ad-poster.webp" aria-describedby="mathoepedia-home-video-description">
+            <source src="/videos/datalog-mathoepedia-ad.mp4" type="video/mp4" />
+            Your browser does not support embedded video. Visit the Mathoepedia question bank to learn more.
+          </video>
+          <span className="home-video-badge">See Mathoepedia in 10 seconds</span>
+        </div>
+      </div>
+    </section>
     <section className="section" id="services"><div className="container"><div className="section-heading"><span className="eyebrow">What we do</span><h2>Professional support from idea to insight.</h2></div><div className="grid grid3">{services.map(([h,p])=><article className="card service-card" key={h}><h3>{h}</h3><p>{p}</p></article>)}</div></div></section>
     <section className="section school-home-feature"><div className="container split"><div><span className="eyebrow light">For school owners and leaders</span><h2>Independent assessment and educational consultancy for better school outcomes.</h2><p>Measure learner performance, verify scheme-of-work and lesson-note coverage, review progress at mid-term and examinations, and receive practical reports for teachers, parents and management.</p><div className="hero-actions"><Link className="btn" href="/schools">Explore school services</Link><Link className="secondary-btn secondary-light" href="/schools#school-consultation">Request consultation</Link></div></div><div className="school-home-points"><span>Curriculum-aligned learner assessment</span><span>Scheme-of-work and lesson-note review</span><span>Cognitive, affective and psychomotor evidence</span><span>Mid-term, termly and end-of-session evaluation</span><span>Teacher feedback and performance analytics</span></div></div></section>
     <section className="section marketplace-preview"><div className="container"><div className="section-heading"><span className="eyebrow light">Datalog Marketplace</span><h2>Buy a useful resource or begin professional work today.</h2><p>Choose affordable templates, premium research tools, structured courses, monthly support or a confidential service order.</p></div><div className="grid grid4"><Link className="market-tile" href="/shop"><strong>Digital Shop</strong><span>Templates and workbooks</span></Link><Link className="market-tile" href="/services/order"><strong>Order a Service</strong><span>Data, research and dashboards</span></Link><Link className="market-tile" href="/courses"><strong>Courses</strong><span>Practical skills and certificates</span></Link><Link className="market-tile" href="/membership"><strong>Membership</strong><span>Recurring tools and support</span></Link></div><Link className="btn" href="/marketplace">Explore the full marketplace</Link></div></section>
