@@ -8,6 +8,25 @@ import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 export const runtime = 'nodejs';
 type Mode = 'hint' | 'explain' | 'teacher-summary';
 
+function verifiedFallback(mode: 'hint' | 'explain', question: (typeof mathoepediaQuestions)[number]) {
+  if (mode === 'explain') return question.explanation;
+  const hints: Record<string, string> = {
+    'Number Sense & Operations': 'Name each place-value column from right to left, then locate the digit named in the question.',
+    'Factors, Multiples & Divisibility': 'Test the choices using divisibility rules or list the factor pairs carefully.',
+    'Fractions, Decimals & Percentages': 'Convert every quantity to the same form before you compare or calculate.',
+    'Algebra & Equations': 'Represent the unknown with a symbol, then undo each operation in reverse order.',
+    'Geometry & Spatial Reasoning': 'Sketch the shape, label the known measurements and choose the matching formula.',
+    'Statistics, Sets & Probability': 'Organise the information in a table or set, then compare the required totals.',
+    'Mathematical Reasoning & Problem Solving': 'Underline what is known and what is required, then solve one small step at a time.',
+    'Money & Financial Mathematics': 'Write all money values in the same unit and identify whether the problem needs a total, difference or percentage.',
+    'Ratio, Proportion & Variation': 'Reduce the ratio first, then find the value of one equal part.',
+    'Measurement, Rates & Time': 'Check the units first and convert them before applying the rate or measurement rule.',
+    'Logic & Combinatorics': 'List the possibilities systematically so that none is repeated or missed.',
+    'Patterns & Sequences': 'Compare consecutive terms and look for the operation that repeats.',
+  };
+  return hints[question.topic] || 'Identify the given information, choose the relevant rule and work through one step at a time.';
+}
+
 function fingerprint(request: Request, scope = 'public') {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const secret = process.env.MATHOEPEDIA_AI_RATE_SECRET || process.env.MATHOEPEDIA_HOST_KEY || 'mathoepedia-rate-limit';
@@ -44,10 +63,10 @@ export async function POST(request: Request) {
     try {
       const message = await askMathoepediaAI(instructions, input, 260);
       await record(db, id, mode, code);
-      return NextResponse.json({ ok: true, message, groundedIn: code, remainingMessage: 'AI guidance is checked against the verified Mathoepedia answer.' });
+      return NextResponse.json({ ok: true, message, source: 'ai', groundedIn: code, remainingMessage: 'AI guidance is checked against the verified Mathoepedia answer.' });
     } catch (error) {
       console.error('Mathoepedia pupil AI request failed:', error instanceof Error ? error.message : 'Unknown error');
-      return NextResponse.json({ error: 'The AI guide is temporarily unavailable. Use the verified explanation instead.' }, { status: 503 });
+      return NextResponse.json({ ok: true, message: verifiedFallback(mode, question), source: 'verified-fallback', groundedIn: code, remainingMessage: 'This guidance comes directly from the verified Mathoepedia bank while adaptive AI is unavailable.' });
     }
   }
 
