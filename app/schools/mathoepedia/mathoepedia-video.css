@@ -1,0 +1,15 @@
+.matho-video-section{position:relative;overflow:hidden;background:linear-gradient(135deg,#f7faff,#eef4fb)}
+.matho-video-section:before{content:"";position:absolute;right:-120px;top:-150px;width:420px;height:420px;border-radius:50%;background:rgba(242,163,19,.12);pointer-events:none}
+.matho-video-grid{position:relative;display:grid;grid-template-columns:minmax(0,.92fr) minmax(420px,1.08fr);gap:50px;align-items:center}
+.matho-video-copy h2{margin:6px 0 15px;color:var(--navy);font-size:clamp(32px,4.4vw,54px);line-height:1.07;letter-spacing:-.035em}
+.matho-video-copy>p{color:var(--muted);font-size:18px;max-width:680px}
+.matho-video-points{display:flex;gap:9px;flex-wrap:wrap;margin:20px 0 4px}
+.matho-video-points span{padding:7px 11px;border:1px solid #cad7e8;border-radius:999px;background:#fff;color:#294668;font-size:12px;font-weight:800}
+.matho-video-figure{margin:0;padding:10px;border:1px solid #cad7e8;border-radius:24px;background:#fff;box-shadow:0 22px 55px rgba(7,31,89,.14)}
+.matho-platform-video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;background:#020b21}
+.matho-video-figure figcaption{padding:10px 8px 3px;color:#56647a;font-size:13px;text-align:center;font-weight:700}
+.matho-video-description{margin-top:18px;border-top:1px solid #d7e0ec;padding-top:14px;color:#506079}
+.matho-video-description summary{width:max-content;max-width:100%;color:#0a4c9a;font-weight:800;cursor:pointer}
+.matho-video-description p{margin:10px 0 0;font-size:14px}
+@media(max-width:920px){.matho-video-grid{grid-template-columns:1fr;gap:32px}.matho-video-copy{max-width:760px}.matho-video-figure{max-width:760px}}
+@media(max-width:560px){.matho-video-section{padding:38px 0}.matho-video-copy>p{font-size:16px}.matho-video-figure{padding:6px;border-radius:17px}.matho-platform-video{border-radius:12px}}

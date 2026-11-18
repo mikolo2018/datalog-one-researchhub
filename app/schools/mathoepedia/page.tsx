@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import './mathoepedia-video.css';
+
 import MathoepediaPractice from '@/components/MathoepediaPractice';
 import { mathoepediaQuestions, mathoepediaTopics, MATHOEPEDIA_RIGHTS } from '@/lib/mathoepedia-questions';
 
@@ -60,6 +62,33 @@ export default function MathoepediaPage() {
       <Link href="/schools/mathoepedia/live">Live Quiz</Link>
       <Link href="/schools#school-consultation">Consultation</Link>
     </div></nav>
+
+    <section className="section matho-video-section" aria-labelledby="matho-video-title"><div className="container matho-video-grid">
+      <div className="matho-video-copy">
+        <span className="eyebrow">See the Mathoepedia vision</span>
+        <h2 id="matho-video-title">Turn maths frustration into stories, understanding and confidence.</h2>
+        <p>The film follows a learner and caregiver moving from difficult homework moments to a calmer, visual and story-led mathematics experience. It captures the direction of Mathoepedia: relatable learning, clear explanations and lasting numeracy confidence.</p>
+        <div className="matho-video-points" aria-label="Current Mathoepedia opportunities">
+          <span>Unified question bank</span><span>Timed live quizzes</span><span>Teacher performance records</span>
+        </div>
+        <div className="hero-actions">
+          <a className="btn" href="#practice">Try free practice</a>
+          <Link className="secondary-btn" href="/schools/mathoepedia/live">Join or host a quiz</Link>
+          <Link className="secondary-btn" href="/schools/mathoepedia/access">Teacher access</Link>
+        </div>
+        <details className="matho-video-description">
+          <summary>Read the video description</summary>
+          <p>A pupil and caregiver begin with a stressful mathematics homework moment. A tablet introduces Mathoepedia and visual cartoon-style mathematics stories. The learner becomes more engaged and confident, ending with an invitation to explore Mathoepedia through Datalog ICT.</p>
+        </details>
+      </div>
+      <figure className="matho-video-figure">
+        <video className="matho-platform-video" controls playsInline preload="metadata" poster="/videos/datalog-mathoepedia-platform-poster.webp" aria-label="Mathoepedia promotional film">
+          <source src="/videos/datalog-mathoepedia-platform.mp4" type="video/mp4" />
+          Your browser does not support embedded video. You can still use the Mathoepedia links beside this film.
+        </video>
+        <figcaption>Mathoepedia: stories they enjoy, mathematics they understand.</figcaption>
+      </figure>
+    </div></section>
 
     <section className="section" id="practice"><div className="container">
       <div className="section-heading"><span className="eyebrow">Interactive practice sampler</span><h2>Search, filter and solve by topic.</h2><p className="muted">Attempt each question first, then reveal the answer and a short explanation. Use the full banks below for complete timed papers.</p></div>
